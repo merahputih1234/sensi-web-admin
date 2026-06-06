@@ -165,7 +165,7 @@ export default function DashboardAdmin() {
         {/* HEADER DASBOR */}
         <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="Sensi Project Logo" className="h-16 w-auto drop-shadow-md" />
+            <img src="/Logo.png" alt="Sensi Project Logo" className="h-16 w-auto drop-shadow-md" />
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Sensi Project Dashboard</h1>
               <p className="text-gray-500 mt-1">Panel Admin & Mekanik</p>
