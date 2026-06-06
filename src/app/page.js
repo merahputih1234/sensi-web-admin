@@ -358,6 +358,12 @@ const exportToExcel = () => {
           <div className="bg-white rounded-lg shadow overflow-hidden animate-fade-in border-t-4 border-green-500">
             <div className="p-6 border-b bg-gray-50">
               <h2 className="text-xl font-bold text-gray-700">📋 Daftar Antrean & Riwayat Servis</h2>
+              <button 
+                onClick={exportToExcel}
+                className="mt-4 bg-green-600 text-white py-2 px-4 rounded-lg font-bold hover:bg-green-700"
+              >
+                📥 Ekspor ke Excel
+              </button>
             </div>
             <div className="p-6 overflow-x-auto min-h-[400px]">
                <table className="w-full text-left border-collapse min-w-max">
