@@ -41,7 +41,7 @@ export default function DashboardAdmin() {
 
   useEffect(() => { fetchData(); }, []);
 
-  // FUNGSI-FUNGSI SPAREPART (Sama persis kayak sebelumnya)
+  // FUNGSI-FUNGSI SPAREPART
   const handleAdd = async (e) => {
     e.preventDefault();
     await fetch("https://api-sensi-project.vercel.app/api/sparepart", {
@@ -92,14 +92,12 @@ export default function DashboardAdmin() {
   // FUNGSI-FUNGSI RIWAYAT & KASIR
   // ==========================================
   const handleUpdateStatus = async (id, statusBaru) => {
-    // JIKA ADMIN KLIK "SELESAI", MUNCULIN POP-UP KASIRNYA DULU!
     if (statusBaru === "selesai") {
       setSelectedServisId(id);
       setIsModalOpen(true);
       return; 
     }
 
-    // Kalau tombol 'Proses' atau 'Diambil', langsung eksekusi tanpa pop-up
     try {
       const response = await fetch(`https://api-sensi-project.vercel.app/api/riwayat/${id}`, {
         method: "PUT",
@@ -117,7 +115,6 @@ export default function DashboardAdmin() {
     }
   };
 
-  // FUNGSI BUAT NYIMPEN DATA KASIR PAS KLIK SIMPAN DI POP-UP
   const submitKasirSelesai = async () => {
     try {
       const response = await fetch(`https://api-sensi-project.vercel.app/api/riwayat/${selectedServisId}`, {
@@ -132,70 +129,17 @@ export default function DashboardAdmin() {
       });
 
       if (response.ok) {
-        // Bersihin form pop-up dan tutup
         setIsModalOpen(false);
         setBiayaJasa("");
         setSparepartTerpakai("");
         setTotalBiaya("");
-        fetchData(); // Refresh tabel
+        fetchData(); 
       } else {
         alert("Gagal menyimpan data transaksi!");
       }
     } catch (error) {
       alert("Gagal konek ke server Python!");
     }
-  };
-
-const exportToExcel = () => {
-    if (!dataRiwayat || dataRiwayat.length === 0) {
-      alert("Belum ada data untuk diekspor!");
-      return;
-    }
-
-    // 1. Template Kolom (Header)
-    const headers = [
-      "ID", 
-      "Tanggal Servis", 
-      "Nama Pelanggan", 
-      "Nomor Plat", 
-      "Keluhan", 
-      "Sparepart Terpakai", 
-      "Biaya Jasa", 
-      "Total Biaya", 
-      "Status"
-    ];
-
-    // 2. Mapping Data ke Template
-    const rows = dataRiwayat.map(item => [
-      item.id,
-      item.tanggal_servis,
-      item.nama_pelanggan,
-      item.nomor_plat,
-      item.keluhan,
-      item.sparepart_terpakai || "-",
-      item.biaya_jasa || 0,
-      item.total_biaya || 0,
-      item.status.toUpperCase()
-    ]);
-
-    // 3. Racik Jadi Format Excel/CSV
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += headers.join(",") + "\n"; // Masukin Header
-    
-    // Masukin Baris Data (pakai tanda kutip biar koma di teks keluhan/sparepart nggak error)
-    rows.forEach(rowArray => {
-      let row = rowArray.map(cell => `"${cell}"`).join(",");
-      csvContent += row + "\n";
-    });
-
-    // 4. Perintah Download Otomatis
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "Laporan_Pendapatan_SensiProject.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const handleDeleteRiwayat = async (id) => {
@@ -210,6 +154,56 @@ const exportToExcel = () => {
     }
   };
 
+  // ==========================================
+  // FUNGSI EKSPORT EXCEL (SUDAH FIX 100%)
+  // ==========================================
+  const exportToExcel = () => {
+    if (!riwayat || riwayat.length === 0) {
+      alert("Belum ada data untuk diekspor!");
+      return;
+    }
+
+    const headers = [
+      "ID", 
+      "Tanggal Servis", 
+      "Nama Pelanggan", 
+      "Nomor Plat", 
+      "Keluhan", 
+      "Sparepart Terpakai", 
+      "Biaya Jasa", 
+      "Total Biaya", 
+      "Status"
+    ];
+
+    const rows = riwayat.map(item => [
+      item.id,
+      item.tanggal_servis,
+      item.nama_pelanggan,
+      item.nomor_plat,
+      item.keluhan,
+      item.sparepart_terpakai || "-",
+      item.biaya_jasa || 0,
+      item.total_biaya || 0,
+      item.status.toUpperCase()
+    ]);
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += headers.join(",") + "\n"; 
+    
+    rows.forEach(rowArray => {
+      let row = rowArray.map(cell => `"${cell}"`).join(",");
+      csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Laporan_Pendapatan_SensiProject.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -217,7 +211,7 @@ const exportToExcel = () => {
         {/* HEADER DASBOR */}
         <div className="bg-white rounded-lg shadow p-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <img src="/Logo.png" alt="Sensi Project Logo" className="h-16 w-auto drop-shadow-md" />
+            <img src="/logo.png" alt="Sensi Project Logo" className="h-16 w-auto drop-shadow-md" />
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Sensi Project Dashboard</h1>
               <p className="text-gray-500 mt-1">Panel Admin & Mekanik</p>
@@ -356,68 +350,69 @@ const exportToExcel = () => {
         {/* HALAMAN RIWAYAT & ANTREAN */}
         {activeTab === "riwayat" && (
           <div className="bg-white rounded-lg shadow overflow-hidden animate-fade-in border-t-4 border-green-500">
-            <div className="p-6 border-b bg-gray-50">
+            {/* 👇 POSISI TOMBOL EXCEL SUDAH DIRAPIKAN 👇 */}
+            <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
               <h2 className="text-xl font-bold text-gray-700">📋 Daftar Antrean & Riwayat Servis</h2>
               <button 
                 onClick={exportToExcel}
-                className="mt-4 bg-green-600 text-white py-2 px-4 rounded-lg font-bold hover:bg-green-700"
+                className="bg-green-600 text-white py-2 px-4 rounded-lg font-bold hover:bg-green-700 shadow-sm"
               >
-                📥 Ekspor ke Excel
+                📥 Download Excel
               </button>
             </div>
+            
             <div className="p-6 overflow-x-auto min-h-[400px]">
                <table className="w-full text-left border-collapse min-w-max">
-                  <thead>
-                    <tr className="bg-gray-100 text-gray-600 uppercase text-sm">
-                      <th className="py-3 px-6 border-b">Tanggal</th>
-                      <th className="py-3 px-6 border-b">Pelanggan & Plat</th>
-                      <th className="py-3 px-6 border-b">Keluhan / Sparepart</th>
-                      <th className="py-3 px-6 border-b text-center">Tagihan</th>
-                      <th className="py-3 px-6 border-b text-center">Status</th>
-                      <th className="py-3 px-6 border-b text-center">Aksi (Admin)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-gray-700 text-sm">
-                    {riwayat.map((item) => (
-                      <tr key={item.id} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-6 font-bold">{item.tanggal_servis}</td>
-                        <td className="py-3 px-6">
-                          <div className="font-semibold">{item.nama_pelanggan}</div>
-                          <div className="bg-gray-200 font-mono text-center rounded px-2 py-1 mt-1 inline-block text-xs">{item.nomor_plat}</div>
-                        </td>
-                        <td className="py-3 px-6 max-w-xs">
-                          <div className="font-semibold text-gray-800">{item.keluhan}</div>
-                          {item.sparepart_terpakai && (
-                            <div className="text-xs text-blue-600 mt-1">🔧 {item.sparepart_terpakai}</div>
-                          )}
-                        </td>
-                        <td className="py-3 px-6 text-center font-bold text-red-600">
-                          {item.total_biaya > 0 ? `Rp ${item.total_biaya.toLocaleString('id-ID')}` : '-'}
-                        </td>
-                        <td className="py-3 px-6 text-center">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
-                            item.status === 'diambil' ? 'bg-blue-100 text-blue-700' :
-                            item.status === 'selesai' ? 'bg-green-100 text-green-700' :
-                            item.status === 'proses' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-red-100 text-red-700'
-                          }`}>
-                            {item.status.toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="py-3 px-6 text-center flex gap-2 justify-center">
-                          {item.status !== 'proses' && item.status !== 'selesai' && item.status !== 'diambil' && <button onClick={() => handleUpdateStatus(item.id, 'proses')} className="bg-yellow-500 text-white px-3 py-1 rounded text-xs font-bold">Proses</button>}
-                          
-                          {/* TOMBOL SELESAI SEKARANG MANGGIL POP-UP KASIR */}
-                          {item.status === 'proses' && <button onClick={() => handleUpdateStatus(item.id, 'selesai')} className="bg-green-500 text-white px-3 py-1 rounded text-xs font-bold">Selesai</button>}
-                          
-                          {item.status === 'selesai' && <button onClick={() => handleUpdateStatus(item.id, 'diambil')} className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-bold">Diambil</button>}
-                          
-                          <button onClick={() => handleDeleteRiwayat(item.id)} className="bg-red-500 text-white px-3 py-1 rounded text-xs font-bold">Hapus</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                 <thead>
+                   <tr className="bg-gray-100 text-gray-600 uppercase text-sm">
+                     <th className="py-3 px-6 border-b">Tanggal</th>
+                     <th className="py-3 px-6 border-b">Pelanggan & Plat</th>
+                     <th className="py-3 px-6 border-b">Keluhan / Sparepart</th>
+                     <th className="py-3 px-6 border-b text-center">Tagihan</th>
+                     <th className="py-3 px-6 border-b text-center">Status</th>
+                     <th className="py-3 px-6 border-b text-center">Aksi (Admin)</th>
+                   </tr>
+                 </thead>
+                 <tbody className="text-gray-700 text-sm">
+                   {riwayat.map((item) => (
+                     <tr key={item.id} className="border-b hover:bg-gray-50">
+                       <td className="py-3 px-6 font-bold">{item.tanggal_servis}</td>
+                       <td className="py-3 px-6">
+                         <div className="font-semibold">{item.nama_pelanggan}</div>
+                         <div className="bg-gray-200 font-mono text-center rounded px-2 py-1 mt-1 inline-block text-xs">{item.nomor_plat}</div>
+                       </td>
+                       <td className="py-3 px-6 max-w-xs">
+                         <div className="font-semibold text-gray-800">{item.keluhan}</div>
+                         {item.sparepart_terpakai && (
+                           <div className="text-xs text-blue-600 mt-1">🔧 {item.sparepart_terpakai}</div>
+                         )}
+                       </td>
+                       <td className="py-3 px-6 text-center font-bold text-red-600">
+                         {item.total_biaya > 0 ? `Rp ${item.total_biaya.toLocaleString('id-ID')}` : '-'}
+                       </td>
+                       <td className="py-3 px-6 text-center">
+                         <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
+                           item.status === 'diambil' ? 'bg-blue-100 text-blue-700' :
+                           item.status === 'selesai' ? 'bg-green-100 text-green-700' :
+                           item.status === 'proses' ? 'bg-yellow-100 text-yellow-700' :
+                           'bg-red-100 text-red-700'
+                         }`}>
+                           {item.status.toUpperCase()}
+                         </span>
+                       </td>
+                       <td className="py-3 px-6 text-center flex gap-2 justify-center">
+                         {item.status !== 'proses' && item.status !== 'selesai' && item.status !== 'diambil' && <button onClick={() => handleUpdateStatus(item.id, 'proses')} className="bg-yellow-500 text-white px-3 py-1 rounded text-xs font-bold">Proses</button>}
+                         
+                         {item.status === 'proses' && <button onClick={() => handleUpdateStatus(item.id, 'selesai')} className="bg-green-500 text-white px-3 py-1 rounded text-xs font-bold">Selesai</button>}
+                         
+                         {item.status === 'selesai' && <button onClick={() => handleUpdateStatus(item.id, 'diambil')} className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-bold">Diambil</button>}
+                         
+                         <button onClick={() => handleDeleteRiwayat(item.id)} className="bg-red-500 text-white px-3 py-1 rounded text-xs font-bold">Hapus</button>
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
             </div>
           </div>
         )}
