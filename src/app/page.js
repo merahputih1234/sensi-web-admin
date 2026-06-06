@@ -155,7 +155,7 @@ export default function DashboardAdmin() {
   };
 
   // ==========================================
-  // FUNGSI EKSPORT EXCEL (SUDAH FIX 100%)
+  // FUNGSI EKSPORT EXCEL (VERSI ANTI BERANTAKAN)
   // ==========================================
   const exportToExcel = () => {
     if (!riwayat || riwayat.length === 0) {
@@ -175,30 +175,38 @@ export default function DashboardAdmin() {
       "Status"
     ];
 
+    // Alat penyapu ranjau buat ngilangin "Enter" / Baris Baru di dalam teks
+    const bersihinTeks = (teks) => {
+      if (!teks) return "-";
+      // Ubah semua "Enter" jadi spasi biasa, biar Excel nggak bingung
+      return String(teks).replace(/(\r\n|\n|\r)/gm, " "); 
+    };
+
     const rows = riwayat.map(item => [
       item.id,
       item.tanggal_servis,
       item.nama_pelanggan,
       item.nomor_plat,
-      item.keluhan,
-      item.sparepart_terpakai || "-",
+      bersihinTeks(item.keluhan),
+      bersihinTeks(item.sparepart_terpakai),
       item.biaya_jasa || 0,
       item.total_biaya || 0,
       item.status.toUpperCase()
     ]);
 
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += headers.join(",") + "\n"; 
+    // UBAH PEMISAH JADI TITIK KOMA (;) KHUSUS EXCEL INDONESIA
+    let csvContent = "data:text/csv;charset=utf-8,%EF%BB%BF"; // Tambah BOM biar karakter aman
+    csvContent += headers.join(";") + "\n"; 
     
     rows.forEach(rowArray => {
-      let row = rowArray.map(cell => `"${cell}"`).join(",");
+      let row = rowArray.map(cell => `"${cell}"`).join(";");
       csvContent += row + "\n";
     });
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "Laporan_Pendapatan_SensiProject.csv");
+    link.setAttribute("download", "Laporan_SensiProject_Rapi.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
