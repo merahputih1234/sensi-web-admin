@@ -146,6 +146,58 @@ export default function DashboardAdmin() {
     }
   };
 
+const exportToExcel = () => {
+    if (!dataRiwayat || dataRiwayat.length === 0) {
+      alert("Belum ada data untuk diekspor!");
+      return;
+    }
+
+    // 1. Template Kolom (Header)
+    const headers = [
+      "ID", 
+      "Tanggal Servis", 
+      "Nama Pelanggan", 
+      "Nomor Plat", 
+      "Keluhan", 
+      "Sparepart Terpakai", 
+      "Biaya Jasa", 
+      "Total Biaya", 
+      "Status"
+    ];
+
+    // 2. Mapping Data ke Template
+    const rows = dataRiwayat.map(item => [
+      item.id,
+      item.tanggal_servis,
+      item.nama_pelanggan,
+      item.nomor_plat,
+      item.keluhan,
+      item.sparepart_terpakai || "-",
+      item.biaya_jasa || 0,
+      item.total_biaya || 0,
+      item.status.toUpperCase()
+    ]);
+
+    // 3. Racik Jadi Format Excel/CSV
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += headers.join(",") + "\n"; // Masukin Header
+    
+    // Masukin Baris Data (pakai tanda kutip biar koma di teks keluhan/sparepart nggak error)
+    rows.forEach(rowArray => {
+      let row = rowArray.map(cell => `"${cell}"`).join(",");
+      csvContent += row + "\n";
+    });
+
+    // 4. Perintah Download Otomatis
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Laporan_Pendapatan_SensiProject.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleDeleteRiwayat = async (id) => {
     if(confirm("Yakin mau hapus riwayat ini?")) {
       try {
